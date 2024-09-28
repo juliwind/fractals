@@ -117,7 +117,7 @@ int main() {
     }
     sf::Text text;
     text.setFont(font);
-    text.setString("Press ENTER to start and end the visualization.\n To change the c-values, press SPACE and use the console.\nTo switch between the Mandelbrot Set and the Julia Set,\npress 's'.");
+    text.setString("Press ENTER to start and end the visualization.\nTo change the c-values, press SPACE and use the console.\nTo switch between the Mandelbrot Set and the Julia Set,\npress '1'.\nZoom in with either '+' or 'W' and zoom out with '-' or 'S'.\nYou can also pan around with your mouse.");
     text.setCharacterSize(20);
     text.setFillColor(sf::Color::Green);
     text.setStyle(sf::Text::Bold);
@@ -188,14 +188,20 @@ int main() {
                         }
                     }
                 }
-                else if(event.key.code == sf::Keyboard::S) {
+                else if(event.key.code == sf::Keyboard::Num1) {
                     is_mandelbrot = !is_mandelbrot;
+                    if(is_mandelbrot) {
+                        drawMandelbrot(window, width, height, max_iterations, min_re, max_re, min_im, max_im);
+                    }
+                    if(!is_mandelbrot) {
+                        drawJulia(window, width, height, max_iterations, c_re, c_im, min_re, max_re, min_im, max_im);
+                    }
                 }
-                else if(event.key.code == sf::Keyboard::Add) {
+                else if(event.key.code == sf::Keyboard::Add || event.key.code == sf::Keyboard::W) {
                     if(is_visualization) {
                         double zoom_factor = 0.9;
-                        double center_re = (max_re - min_re) / 2;
-                        double center_im = (max_im - min_im) / 2;
+                        double center_re = (max_re + min_re) / 2;
+                        double center_im = (max_im + min_im) / 2;
                         double new_center_dist_re = ((max_re - min_re) * zoom_factor) / 2;
                         double new_center_dist_im = ((max_im - min_im) * zoom_factor) / 2;
                         
@@ -218,9 +224,30 @@ int main() {
                     }
                     
                 }
-                else if(event.key.code == sf::Keyboard::Subtract) {
+                else if(event.key.code == sf::Keyboard::Subtract || event.key.code == sf::Keyboard::S) {
                     if(is_visualization) {
                         double zoom_factor = 1.1;
+                        double center_re = (max_re + min_re) / 2;
+                        double center_im = (max_im + min_im) / 2;
+                        double new_center_dist_re = ((max_re - min_re) * zoom_factor) / 2;
+                        double new_center_dist_im = ((max_im - min_im) * zoom_factor) / 2;
+                        
+                        min_re = center_re - new_center_dist_re;
+                        max_re = center_re + new_center_dist_re;
+                        min_im = center_im - new_center_dist_im;
+                        max_im = center_im + new_center_dist_im;
+
+                        double currentScale = max_re - min_re;
+                        max_iterations = initial_max_iterations + static_cast<int>(log(initial_scale / currentScale) * 20);
+                        if (max_iterations < initial_max_iterations) {
+                            max_iterations = initial_max_iterations;
+                        }
+                        if(is_mandelbrot) {
+                            drawMandelbrot(window, width, height, max_iterations, min_re, max_re, min_im, max_im);
+                        }
+                        if(!is_mandelbrot) {
+                            drawJulia(window, width, height, max_iterations, c_re, c_im, min_re, max_re, min_im, max_im);
+                        }
                     }
                 }
             }
@@ -263,6 +290,5 @@ int main() {
             }
         }
     }
-
     return 0;
 }
