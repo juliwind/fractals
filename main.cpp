@@ -86,7 +86,12 @@ void drawMandelbrot(sf::RenderWindow& window, int width, int height, int max_ite
 
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Fractals!!");
+    sf::RenderWindow window(sf::VideoMode(800, 800), "Fractal Visualizer");
+
+    sf::Vector2u size = window.getSize();
+    int width = size.x;
+    int height = size.y;
+
     double c_re = -0.7;
     double c_im = 0.27015;
 
@@ -96,6 +101,12 @@ int main() {
     double max_im = 2.0;
 
     int max_iterations = 350;
+
+    bool visualizationActive = false;
+    bool is_mandelbrot = false;
+
+    bool mouse_dragging = false;
+    sf::Vector2i last_mouse_pos;
 
     sf::Font font;
     if (!font.loadFromFile("Courier_New.ttf")) {
@@ -119,9 +130,6 @@ int main() {
     window.draw(text);
     window.display();
 
-    bool visualizationActive = false;
-    bool is_mandelbrot = false;
-
     while (window.isOpen()) {
 
         sf::Event event;
@@ -133,9 +141,6 @@ int main() {
                     visualizationActive = !visualizationActive;
 
                     if (visualizationActive) {
-                        sf::Vector2u size = window.getSize();
-                        unsigned int width = size.x;
-                        unsigned int height = size.y;
                         if (is_mandelbrot) {
                             drawMandelbrot(window, width, height, max_iterations, min_re, max_re, min_im, max_im);
                         }
@@ -173,9 +178,6 @@ int main() {
                     }
 
                     if (visualizationActive) {
-                        sf::Vector2u size = window.getSize();
-                        unsigned int width = size.x;
-                        unsigned int height = size.y;
                         if (is_mandelbrot) {
                             drawMandelbrot(window, width, height, max_iterations, min_re, max_re, min_im, max_im);
                         }
@@ -186,6 +188,43 @@ int main() {
                 }
                 else if(event.key.code == sf::Keyboard::S) {
                     is_mandelbrot = !is_mandelbrot;
+                }
+            }
+            if (event.type == sf::Event::MouseButtonPressed) {
+                if (event.mouseButton.button == sf::Mouse::Left) {
+                    mouse_dragging = true;
+                    last_mouse_pos = sf::Mouse::getPosition(window);
+                }
+            }
+
+            if (event.type == sf::Event::MouseButtonReleased) {
+                if (event.mouseButton.button == sf::Mouse::Left) {
+                    mouse_dragging = false;
+                }
+            }
+
+            if (event.type == sf::Event::MouseMoved) {
+                if(mouse_dragging && visualizationActive) {
+                    sf::Vector2i new_mouse_pos = sf::Mouse::getPosition(window);
+                    sf::Vector2i delta = new_mouse_pos - last_mouse_pos;
+                    double x_size = max_re - min_re;
+                    double y_size = max_im - min_im;
+                    double delta_re = ((double)delta.x / (width-1)) * x_size;
+                    double delta_im = ((double)delta.y / (height-1)) * y_size;
+
+                    min_re -= delta_re;
+                    max_re -= delta_re;
+                    min_im += delta_im;
+                    max_im += delta_im;
+
+                    last_mouse_pos = new_mouse_pos;
+
+                    if(is_mandelbrot) {
+                        drawMandelbrot(window, width, height, max_iterations, min_re, max_re, min_im, max_im);
+                    }
+                    if(!is_mandelbrot) {
+                        drawJulia(window, width, height, max_iterations, c_re, c_im, min_re, max_re, min_im, max_im);
+                    }
                 }
             }
         }
