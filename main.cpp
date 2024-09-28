@@ -99,10 +99,12 @@ int main() {
     double max_re = 2.0;
     double min_im = -2.0;
     double max_im = 2.0;
+    double initial_scale = max_re - min_re;
 
-    int max_iterations = 350;
+    int initial_max_iterations = 100;
+    int max_iterations = initial_max_iterations;
 
-    bool visualizationActive = false;
+    bool is_visualization = false;
     bool is_mandelbrot = false;
 
     bool mouse_dragging = false;
@@ -138,9 +140,9 @@ int main() {
                 window.close();
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Enter) {
-                    visualizationActive = !visualizationActive;
+                    is_visualization = !is_visualization;
 
-                    if (visualizationActive) {
+                    if (is_visualization) {
                         if (is_mandelbrot) {
                             drawMandelbrot(window, width, height, max_iterations, min_re, max_re, min_im, max_im);
                         }
@@ -177,7 +179,7 @@ int main() {
                         }
                     }
 
-                    if (visualizationActive) {
+                    if (is_visualization) {
                         if (is_mandelbrot) {
                             drawMandelbrot(window, width, height, max_iterations, min_re, max_re, min_im, max_im);
                         }
@@ -188,6 +190,38 @@ int main() {
                 }
                 else if(event.key.code == sf::Keyboard::S) {
                     is_mandelbrot = !is_mandelbrot;
+                }
+                else if(event.key.code == sf::Keyboard::Add) {
+                    if(is_visualization) {
+                        double zoom_factor = 0.9;
+                        double center_re = (max_re - min_re) / 2;
+                        double center_im = (max_im - min_im) / 2;
+                        double new_center_dist_re = ((max_re - min_re) * zoom_factor) / 2;
+                        double new_center_dist_im = ((max_im - min_im) * zoom_factor) / 2;
+                        
+                        min_re = center_re - new_center_dist_re;
+                        max_re = center_re + new_center_dist_re;
+                        min_im = center_im - new_center_dist_im;
+                        max_im = center_im + new_center_dist_im;
+
+                        double currentScale = max_re - min_re;
+                        max_iterations = initial_max_iterations + static_cast<int>(log(initial_scale / currentScale) * 20);
+                        if (max_iterations < initial_max_iterations) {
+                            max_iterations = initial_max_iterations;
+                        }
+                        if(is_mandelbrot) {
+                            drawMandelbrot(window, width, height, max_iterations, min_re, max_re, min_im, max_im);
+                        }
+                        if(!is_mandelbrot) {
+                            drawJulia(window, width, height, max_iterations, c_re, c_im, min_re, max_re, min_im, max_im);
+                        }
+                    }
+                    
+                }
+                else if(event.key.code == sf::Keyboard::Subtract) {
+                    if(is_visualization) {
+                        double zoom_factor = 1.1;
+                    }
                 }
             }
             if (event.type == sf::Event::MouseButtonPressed) {
@@ -204,7 +238,7 @@ int main() {
             }
 
             if (event.type == sf::Event::MouseMoved) {
-                if(mouse_dragging && visualizationActive) {
+                if(mouse_dragging && is_visualization) {
                     sf::Vector2i new_mouse_pos = sf::Mouse::getPosition(window);
                     sf::Vector2i delta = new_mouse_pos - last_mouse_pos;
                     double x_size = max_re - min_re;
