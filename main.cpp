@@ -3,6 +3,7 @@
 #include <string>
 #include <limits>
 #include <SFML/Graphics.hpp>
+#include <cmath>
 
 using namespace std;
 
